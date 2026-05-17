@@ -159,6 +159,70 @@ car-rental-system/
 └── README.md
 ```
 
-## Live URL
+## Deployment
 
-[Live Demo](https://your-deployed-url.com)
+### Option 1: Deploy as a single app (recommended) — Render / Railway
+
+This option serves the built React frontend directly from Express, so you only deploy one service.
+
+**Steps:**
+
+1. **Update server/index.js** — Add this before your API routes:
+
+```js
+const path = require("path");
+// ... after cookieParser(), before routes
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+  });
+}
+```
+
+2. **Set up environment variables** on the platform:
+   - `MONGODB_URI` — your MongoDB connection string
+   - `JWT_SECRET` — a secure random string
+   - `CLIENT_URL` — your deployed URL (e.g. `https://your-app.onrender.com`)
+   - `NODE_ENV` — `production`
+   - Firebase config variables prefixed with `VITE_`
+
+3. **Build the client**:
+   ```bash
+   cd client && npm install && npm run build
+   ```
+
+4. **Platform-specific setup**:
+
+   **Render.com:**
+   - Create a new Web Service
+   - Root Directory: leave blank
+   - Build Command: `cd client && npm install && npm run build && cd ../server && npm install`
+   - Start Command: `cd server && node index.js`
+   - Add all env vars in Render dashboard
+
+   **Railway.app:**
+   - Create a new project from GitHub
+   - Add all env vars in Railway dashboard
+   - Start Command: `cd server && node index.js`
+
+### Option 2: Deploy separately (frontend + backend)
+
+**Frontend → Vercel / Netlify**
+- Connect your GitHub repo
+- Set root directory to `client`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Add env vars (VITE_*)
+
+**Backend → Render / Railway**
+- Set root directory to `server`
+- Start command: `node index.js`
+- Add env vars (MONGODB_URI, JWT_SECRET, etc.)
+- Update `CLIENT_URL` to your frontend URL
+- Update `VITE_API_URL` in frontend to your backend URL
+
+### Important for production:
+- Set `sameSite: "none"` and `secure: true` in cookie options (server/routes/auth.js)
+- Use a strong `JWT_SECRET`
+- Whitelist your deployment IP in MongoDB Atlas
