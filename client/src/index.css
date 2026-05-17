@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+
+:root {
+  --background: #fefdfb;
+  --foreground: #2d2416;
+  --primary: #e8751a;
+  --secondary: #fef3e6;
+  --accent: #fff4e6;
+  --card: #ffffff;
+  --border: rgba(232, 117, 26, 0.15);
+}
+
+.dark {
+  --background: #1a1410;
+  --foreground: #fef9f4;
+  --primary: #f59e0b;
+  --secondary: #3d3020;
+  --accent: #4a3b28;
+  --card: #2d2416;
+  --border: rgba(245, 158, 11, 0.2);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", sans-serif;
+}
+
+* {
+  transition: background-color 0.2s, color 0.2s;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
