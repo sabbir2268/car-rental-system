@@ -99,7 +99,6 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
-VITE_API_URL=http://localhost:5000/api
 ```
 
 ## API Endpoints
@@ -161,68 +160,66 @@ car-rental-system/
 
 ## Deployment
 
-### Option 1: Deploy as a single app (recommended) — Render / Railway
+### Step 1: Deploy Server on Render
 
-This option serves the built React frontend directly from Express, so you only deploy one service.
+1. Push your code to GitHub
 
-**Steps:**
+2. On [Render.com](https://render.com):
+   - New Web Service → connect your repo
+   - Root Directory: **server**
+   - Build Command: `npm install`
+   - Start Command: `node index.js`
 
-1. **Update server/index.js** — Add this before your API routes:
-
-```js
-const path = require("path");
-// ... after cookieParser(), before routes
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-  });
-}
-```
-
-2. **Set up environment variables** on the platform:
-   - `MONGODB_URI` — your MongoDB connection string
-   - `JWT_SECRET` — a secure random string
-   - `CLIENT_URL` — your deployed URL (e.g. `https://your-app.onrender.com`)
-   - `NODE_ENV` — `production`
-   - Firebase config variables prefixed with `VITE_`
-
-3. **Build the client**:
-   ```bash
-   cd client && npm install && npm run build
+3. Add these environment variables in Render dashboard:
+   ```
+   NODE_ENV=production
+   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/car-rental
+   JWT_SECRET=<your-secure-random-string>
+   CLIENT_URL=https://your-vercel-app.vercel.app
    ```
 
-4. **Platform-specific setup**:
+4. **MongoDB Atlas:** Network Access → Add IP `0.0.0.0/0`
 
-   **Render.com:**
-   - Create a new Web Service
-   - Root Directory: leave blank
-   - Build Command: `cd client && npm install && npm run build && cd ../server && npm install`
-   - Start Command: `cd server && node index.js`
-   - Add all env vars in Render dashboard
+5. After deploy, copy your Render URL (e.g. `https://car-rental-api.onrender.com`)
 
-   **Railway.app:**
-   - Create a new project from GitHub
-   - Add all env vars in Railway dashboard
-   - Start Command: `cd server && node index.js`
+### Step 2: Deploy Client on Vercel
 
-### Option 2: Deploy separately (frontend + backend)
+1. On [Vercel.com](https://vercel.com):
+   - New Project → import your GitHub repo
+   - Root Directory: **client**
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
 
-**Frontend → Vercel / Netlify**
-- Connect your GitHub repo
-- Set root directory to `client`
-- Build command: `npm run build`
-- Output directory: `dist`
-- Add env vars (VITE_*)
+2. Add these environment variables in Vercel dashboard:
+   ```
+   VITE_FIREBASE_API_KEY=your_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_API_URL=https://car-rental-api.onrender.com/api
+   ```
 
-**Backend → Render / Railway**
-- Set root directory to `server`
-- Start command: `node index.js`
-- Add env vars (MONGODB_URI, JWT_SECRET, etc.)
-- Update `CLIENT_URL` to your frontend URL
-- Update `VITE_API_URL` in frontend to your backend URL
+3. **Firebase Console:** Authentication → Settings → Authorized domains → add your Vercel URL
+
+### Local Development
+
+```bash
+# Terminal 1 - Server (port 5000)
+cd server && npm start
+
+# Terminal 2 - Client (port 5173, proxies /api to 5000)
+cd client && npm run dev
+```
+
+After deployment, update `client/.env` locally:
+```
+VITE_API_URL=https://car-rental-api.onrender.com/api
+```
+Then all API calls from your local dev server will hit the deployed Render backend.
 
 ### Important for production:
-- Set `sameSite: "none"` and `secure: true` in cookie options (server/routes/auth.js)
-- Use a strong `JWT_SECRET`
-- Whitelist your deployment IP in MongoDB Atlas
+- Cookie settings auto-adjust (`secure: true`, `sameSite: 'none'` when `NODE_ENV=production`)
+- Use a strong `JWT_SECRET` (generate via `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+- MongoDB Atlas must whitelist Render's IP or `0.0.0.0/0`
