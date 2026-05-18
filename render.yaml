@@ -11,7 +11,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        generateValue: true
+        value: d6e6b68cd2fb1292fc841548a4ac537b6e0266442bfb48433abbf815bc8091a7
       - key: CLIENT_URL
         fromService:
           name: car-rental-system
